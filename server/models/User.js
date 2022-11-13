@@ -52,6 +52,7 @@ userSchema.virtual('bookCount').get(function () {
   return this.savedBooks.length;
 });
 
+//this will be a model unlike Book which was a subdocument
 const User = model('User', userSchema);
 
 module.exports = User;
