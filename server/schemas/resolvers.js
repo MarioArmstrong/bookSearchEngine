@@ -1,26 +1,94 @@
-const {Book, User} = require('../models');
+const { Book, User } = require("../models");
+const { signToken } = require("../utils/auth");
 
 const resolvers = {
-    Query: {
-      book: async () => {
-        return Book.find({});
-      },
-      user: async (parent, { _id }) => {
-        const params = _id ? { _id } : {};
-        return User.find(params);
-      },
+  Query: {
+    book: async () => {
+      return Book.find({});
     },
-    Mutation: {
-        saveBook: async (parent, args) => {
-            const saveNewBook = await Book.create(args);
-            return saveNewBook;
-        },
-        addUser: async (parent, args) => {
-            const newUser = await User.create(args);
-            return newUser;
-        }
+    user: async (parent, { _id }) => {
+      const params = _id ? { _id } : {};
+      return User.find(params);
     },
-  };
-  
-  module.exports = resolvers;
-  
+  },
+  Mutation: {
+    //GET single User
+    getSingleUser: async ({ user = null, params }, res) => {
+      const foundUser = await User.findOne({
+        $or: [
+          { _id: user ? user._id : params.id },
+          { username: params.username },
+        ],
+      });
+
+      if (!foundUser) {
+        return res
+          .status(400)
+          .json({ message: "Cannot find a user with this id!" });
+      }
+
+      return res.json(foundUser);
+    },
+    //PUT new User
+    createUser: async ({ body }, res) => {
+      const user = await User.create(body);
+
+      if (!user) {
+        return res.status(400).json({ message: "Something is wrong!" });
+      }
+      const token = signToken(user);
+      return res.json({ token, user });
+    },
+
+    //PUT User
+    login: async () => {
+      const user = await User.findOne({
+        $or: [{ username: body.username }, { email: body.email }],
+      });
+      if (!user) {
+        return res.status(400).json({ message: "Can't find this user" });
+      }
+
+      const correctPw = await user.isCorrectPassword(body.password);
+
+      if (!correctPw) {
+        return res.status(400).json({ message: "Wrong password!" });
+      }
+      const token = signToken(user);
+      return res.json({ token, user });
+    },
+  },
+
+  //POST new Book
+  saveBook: async ({ user, body }, res) => {
+    console.log(user);
+    try {
+      const updatedUser = await User.findOneAndUpdate(
+        { _id: user._id },
+        { $addToSet: { savedBooks: body } },
+        { new: true, runValidators: true }
+      );
+      return res.json(updatedUser);
+    } catch (err) {
+      console.log(err);
+      return res.status(400).json(err);
+    }
+  },
+
+  //DELETE Book
+  deleteBook: async ({ user, params }, res) => {
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: user._id },
+      { $pull: { savedBooks: { bookId: params.bookId } } },
+      { new: true }
+    );
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ message: "Couldn't find user with this id!" });
+    }
+    return res.json(updatedUser);
+  },
+};
+
+module.exports = resolvers;
