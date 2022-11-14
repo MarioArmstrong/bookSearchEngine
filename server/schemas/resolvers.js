@@ -1,83 +1,84 @@
 const { Book, User } = require("../models");
 const { signToken } = require("../utils/auth");
+const { AuthenticationError } = require("apollo-server-express");
 
 const resolvers = {
   Query: {
-    book: async () => {
-      return Book.find({});
-    },
-    user: async (parent, { _id }) => {
-      const params = _id ? { _id } : {};
-      return User.find(params);
+    me: async (parent, args, context, info) => {
+      if (context.user) {
+        return User.findOne({ _id: context.user_id });
+      }
     },
   },
   Mutation: {
-    //GET single User
-    getSingleUser: async ({ user = null, params }, res) => {
-      const foundUser = await User.findOne({
-        $or: [
-          { _id: user ? user._id : params.id },
-          { username: params.username },
-        ],
-      });
-
-      if (!foundUser) {
-        return res
-          .status(400)
-          .json({ message: "Cannot find a user with this id!" });
-      }
-
-      return res.json(foundUser);
-    },
-    //PUT new User
-    createUser: async ({ body }, res) => {
-      const user = await User.create(body);
-
-      if (!user) {
-        return res.status(400).json({ message: "Something is wrong!" });
-      }
-      const token = signToken(user);
-      return res.json({ token, user });
-    },
-
     //PUT User
-    login: async () => {
-      const user = await User.findOne({
-        $or: [{ username: body.username }, { email: body.email }],
-      });
+    login: async (parent, { email, password }) => {
+      const user = await User.findOne({ email });
       if (!user) {
-        return res.status(400).json({ message: "Can't find this user" });
+        throw new AuthenticationError("Error: user does not exist!");
       }
 
-      const correctPw = await user.isCorrectPassword(body.password);
+      const correctPw = await user.isCorrectPassword(password);
 
       if (!correctPw) {
-        return res.status(400).json({ message: "Wrong password!" });
+        throw new AuthenticationError("Incorrect password!");
       }
       const token = signToken(user);
-      return res.json({ token, user });
+      return { token, user };
     },
-  },
 
-  //POST new Book
-  saveBook: async ({ user, body }, res) => {
-    console.log(user);
-    try {
-      const updatedUser = await User.findOneAndUpdate(
-        { _id: user._id },
-        { $addToSet: { savedBooks: body } },
-        { new: true, runValidators: true }
-      );
-      return res.json(updatedUser);
-    } catch (err) {
-      console.log(err);
-      return res.status(400).json(err);
-    }
-  },
+    //GET single User
+    // getSingleUser: async (parent, args, {user_id}) => {
+    //   const foundUser = await User.findOne({_id: user_id});
 
-  //DELETE Book
-  deleteBook: async (parent, { bookId }) => {
-    return Book.findOneAndDelete({ _id: bookId });
+    //   if (!foundUser) {
+    //     throw new AuthenticationError("User was not found!");
+    //   }
+
+    //   return foundUser;
+    // },
+
+    // POST new User
+    createUser: async (parent, { username, email, password }) => {
+      const user = await User.create({ username, email, password });
+
+      const token = signToken(user);
+      return { token, user };
+    },
+
+    //POST new Book
+    saveBook: async (parent, { user_id, book }, context) => {
+      if (context.user) {
+        const updatedUser = await User.findOneAndUpdate(
+          { _id: user_id },
+          { $addToSet: { savedBooks: book } },
+          { new: true, runValidators: true }
+        );
+        return updatedUser;
+      }
+      throw new AuthenticationError("You need to be logged in!");
+    },
+
+    //DELETE Book
+    deleteBook: async (parent, { bookId }, context) => {
+      if (context.user) {
+        const updatedBooks = await Book.findOneAndDelete(
+          { _id: context.user._id },
+          { $pull: { savedBooks: { bookId: bookId } } },
+          { new: true }
+        );
+        return updatedBooks;
+      }
+      throw new AuthenticationError("You need to be logged in!");
+    },
+
+    //DELETE User
+    // deleteUser: async (parent, args, context) => {
+    //   if(context.user){
+    //     return User.findOneAndDelete({_id: context.user._id});
+    //   }
+    //   throw new AuthenticationError("You need to be logged in!");
+    // },
   },
 };
 
