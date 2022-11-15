@@ -6,8 +6,10 @@ const resolvers = {
   Query: {
     me: async (parent, args, context, info) => {
       if (context.user) {
-        return User.findOne({ _id: context.user_id });
+        const userData = await User.findOne({ _id: context.user._id });
+        return userData;
       }
+      throw new AuthenticationError("You must login first!");
     },
   },
   Mutation: {
@@ -39,8 +41,8 @@ const resolvers = {
     // },
 
     // POST new User
-    createUser: async (parent, { username, email, password }) => {
-      const user = await User.create({ username, email, password });
+    createUser: async (parent, args) => {
+      const user = await User.create(args);
 
       const token = signToken(user);
       return { token, user };
@@ -64,6 +66,7 @@ const resolvers = {
       if (context.user) {
         const updatedBooks = await Book.findOneAndDelete(
           { _id: context.user._id },
+          // { $pull: { savedBooks: { bookId: bookId } } },
           { $pull: { savedBooks: { bookId: bookId } } },
           { new: true }
         );
