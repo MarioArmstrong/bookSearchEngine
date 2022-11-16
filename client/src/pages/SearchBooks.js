@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@apollo/client";
 import { GET_ME } from "../utils/queries";
+import { SAVE_BOOK } from "../utils/mutations";
 import {
   Jumbotron,
   Container,
@@ -13,12 +14,12 @@ import {
 } from "react-bootstrap";
 
 import Auth from "../utils/auth";
-import { saveBook, searchGoogleBooks } from "../utils/API";
+import { searchGoogleBooks } from "../utils/API";
 import { saveBookIds, getSavedBookIds } from "../utils/localStorage";
 
 const SearchBooks = () => {
   const { loading, data } = useQuery(GET_ME);
-
+  const [saveBook, { error, saveReturn }] = useMutation(SAVE_BOOK);
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
@@ -78,9 +79,11 @@ const SearchBooks = () => {
     }
 
     try {
-      const response = await saveBook(bookToSave, token);
+      const { saveReturn } = await saveBook({
+        variables: { bookData: { ...bookToSave } },
+      });
 
-      if (!response.ok) {
+      if (!saveReturn) {
         throw new Error("something went wrong!");
       }
 

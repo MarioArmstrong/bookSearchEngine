@@ -14,7 +14,7 @@ const resolvers = {
   },
   Mutation: {
     //PUT User
-    login: async (parent, { email, password }) => {
+    loginUser: async (parent, { email, password }, context) => {
       const user = await User.findOne({ email });
       if (!user) {
         throw new AuthenticationError("Error: user does not exist!");
@@ -49,11 +49,12 @@ const resolvers = {
     },
 
     //POST new Book
-    saveBook: async (parent, { user_id, book }, context) => {
+    saveBook: async (parent, { bookData }, context) => {
+      console.log("JINGLEBELLS");
       if (context.user) {
         const updatedUser = await User.findOneAndUpdate(
-          { _id: user_id },
-          { $addToSet: { savedBooks: book } },
+          { _id: context.user._id },
+          { $addToSet: { savedBooks: bookData } },
           { new: true, runValidators: true }
         );
         return updatedUser;
