@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 //this is basically querying User, which includes Book through savedBooks since Book isn't a model
 export const GET_ME = gql`
-  {
+  query {
     me {
       _id
       username
@@ -13,7 +13,7 @@ export const GET_ME = gql`
         description
         title
         image
-        url
+        link
       }
     }
   }

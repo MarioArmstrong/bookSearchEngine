@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@apollo/client";
-import { GET_ME } from "../utils/queries";
 import { SAVE_BOOK } from "../utils/mutations";
 import {
   Jumbotron,
@@ -18,8 +16,6 @@ import { searchGoogleBooks } from "../utils/API";
 import { saveBookIds, getSavedBookIds } from "../utils/localStorage";
 
 const SearchBooks = () => {
-  const { loading, data } = useQuery(GET_ME);
-  const [saveBook, { error, saveReturn }] = useMutation(SAVE_BOOK);
   // create state for holding returned google api data
   const [searchedBooks, setSearchedBooks] = useState([]);
   // create state for holding our search field data
@@ -33,6 +29,8 @@ const SearchBooks = () => {
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
   });
+
+  const [saveBook, { error }] = useMutation(SAVE_BOOK);
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
@@ -70,7 +68,7 @@ const SearchBooks = () => {
   const handleSaveBook = async (bookId) => {
     // find the book in `searchedBooks` state by the matching id
     const bookToSave = searchedBooks.find((book) => book.bookId === bookId);
-
+    console.log(bookToSave);
     // get token
     const token = Auth.loggedIn() ? Auth.getToken() : null;
 
@@ -79,11 +77,9 @@ const SearchBooks = () => {
     }
 
     try {
-      const { saveReturn } = await saveBook({
-        variables: { bookData: { ...bookToSave } },
-      });
-
-      if (!saveReturn) {
+      const response = await saveBook(bookToSave, token);
+      console.log("here");
+      if (!response.ok) {
         throw new Error("something went wrong!");
       }
 
