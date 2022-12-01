@@ -76,7 +76,6 @@ const SearchBooks = () => {
     }
 
     try {
-      console.log(BookInput);
       const { data } = await saveBook({
         variables: { bookData: { ...BookInput } },
       });

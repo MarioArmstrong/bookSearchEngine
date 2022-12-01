@@ -45,7 +45,6 @@ const resolvers = {
           { $addToSet: { savedBooks: bookData } },
           { new: true }
         );
-        console.log(updateUser);
         return updateUser;
       }
 
@@ -55,7 +54,7 @@ const resolvers = {
     //DELETE Book
     deleteBook: async (parent, { bookId }, context) => {
       if (context.user) {
-        return User.findOneAndDelete(
+        return User.findOneAndUpdate(
           { _id: context.user._id },
           { $pull: { savedBooks: { bookId: bookId } } },
           { new: true }
