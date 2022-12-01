@@ -1,10 +1,14 @@
-# Book Search Engine
+# 🕮 Book Search Engine
 
 [Book Search Engine Live](https://marioarmstrong.github.io/bookSearchEngine/)
 
 ## Description
 
 The purpose of this application is to allow the user to search book titles through the Google Books Search API, save selected titles to a personal collection, and delete those titles.
+
+> AS AN avid reader
+> I WANT to search for new books to read
+> SO THAT I can keep a list of books to purchase
 
 ## Table of Contents
 
@@ -21,15 +25,21 @@ In order to run this application you must first run `npm install` in the termina
 
 ## Usage
 
-![]()
+![login](./assets/logIn.jpg)
 
-![]()
+![book search](./assets/bookSearch.jpg)
 
-![]()
+![saved books](./assets/savedBooks.jpg)
 
-![]()
+![my books](./assets/myBooks.jpg)
+
+![deleted books](./assets/deletedBook.png)
+
+![no books](./assets/noBooks.jpg)
 
 ## Credits
+
+[![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/MarioArmstrong)
 
 ## How to Contribute
 
@@ -37,7 +47,7 @@ In order to run this application you must first run `npm install` in the termina
 
 ## License
 
-MIT License
+[![GitHub license](https://badgen.net/github/license/Naereen/Strapdown.js)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
 
 Copyright (c) 2022 Mario Armstrong
 
